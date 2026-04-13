@@ -909,12 +909,107 @@ function addItem(){
   addPhotoData=null;
   document.getElementById('add-photo-wrap').innerHTML=`<div class="add-photo-btn" onclick="document.getElementById('add-file-inp').click()"><span style="font-size:22px">+</span><span>사진</span></div>`;
   document.getElementById('add-file-inp').value='';
+  save();
   render();
 }
 
-function clearDone(){ items=items.filter(i=>!i.done); render(); }
+function clearDone(){ items=items.filter(i=>!i.done); save(); render(); }
 
-render();
+/* ── Google Sheets 연동 자동저장 ── */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyLyDi_7rg73E_pWNrFtzcvhlPUuKlJWA4aNjcRncX3v_5sYc50ffgG3-FH7E2g4MzIFg/exec';
+let saveTimer = null;
+let isSaving = false;
+let isLoading = false;
+
+function save(){
+  // 디바운스: 연속 입력시 0.8초 후 한번만 저장
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ doSave(); }, 800);
+}
+
+async function doSave(){
+  if(isSaving) return;
+  isSaving = true;
+  showToast('💾 저장 중...', '#888');
+  const names = [0,1,2].map(i=>document.getElementById('pname'+i)?.value||'');
+  try {
+    // 사진(base64)은 용량이 크므로 제외하고 저장
+    const itemsToSave = items.map(it=>({...it, photo:null}));
+    await fetch(GAS_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'save', items:itemsToSave, names})
+    });
+    showToast('✓ 저장됨', '#2e7d32');
+  } catch(e){
+    showToast('❌ 저장 실패', '#c62828');
+  }
+  isSaving = false;
+}
+
+async function loadSaved(){
+  showToast('🔄 불러오는 중...', '#888');
+  isLoading = true;
+  try {
+    const res = await fetch(GAS_URL + '?action=load');
+    const data = await res.json();
+    if(data && data.items && data.items.length > 0){
+      items = data.items;
+      nextId = Math.max(...items.map(i=>i.id)) + 1;
+    }
+    if(data && data.names){
+      data.names.forEach((n,i)=>{ const el=document.getElementById('pname'+i); if(el&&n) el.value=n; });
+    }
+    showToast('✓ 불러오기 완료', '#2e7d32');
+  } catch(e){
+    showToast('⚠️ 오프라인 모드', '#b8860b');
+  }
+  isLoading = false;
+  render();
+}
+
+function showToast(msg, color){
+  let el = document.getElementById('save-toast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'save-toast';
+    el.style.cssText = 'position:fixed;bottom:24px;right:24px;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s,background .3s;pointer-events:none';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = color;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  if(msg.includes('✓')){
+    el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2000);
+  }
+}
+
+// 저장 트리거
+const _origSetQty = setQty;
+setQty = function(id,pi,v){ _origSetQty(id,pi,v); save(); }
+
+const _origSetField = setField;
+setField = function(id,f,v){ _origSetField(id,f,v); save(); }
+
+const _origToggleDone = toggleDone;
+toggleDone = function(id){ _origToggleDone(id); save(); }
+
+const _origDelItem = delItem;
+delItem = function(id){ _origDelItem(id); save(); }
+
+const _origMoveCat = moveCat;
+moveCat = function(id,newCat){ _origMoveCat(id,newCat); save(); }
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  [0,1,2].forEach(i=>{
+    const el = document.getElementById('pname'+i);
+    if(el) el.addEventListener('input', ()=>save());
+  });
+});
+
+loadSaved();
 </script>
 </body>
 </html>
