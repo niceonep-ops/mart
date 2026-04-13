@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PX 장보기</title>
+<style>
+:root{
+  --bg:#faf8f3;
+  --bg-panel:#f0ede4;
+  --border:#d8d3c5;
+  --border-focus:#2e7d32;
+  --text:#2c2c2c;
+  --text-sub:#6b6b5e;
+  --accent:#2e7d32;
+  --green:#388e3c;
+  --gold:#b8860b;
+  --red:#c62828;
+  --r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 32px}
+.wrap{max-width:1500px;margin:0 auto}
+
+/* 헤더 */
+.header{display:flex;align-items:center;gap:10px;margin-bottom:12px;background:#2e7d32;padding:14px 18px;border-radius:var(--r)}
+h1{font-size:22px;font-weight:700;color:#fff}
+.badge-px{background:#fff;color:#2e7d32;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.4px}
+.sub{font-size:13px;color:#fff;opacity:0.85;margin-bottom:20px}
+
+/* 통계 */
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stat{background:var(--bg-panel);border-radius:var(--r);padding:14px 16px;border:1px solid var(--border)}
+.stat-label{font-size:11px;color:var(--text-sub);margin-bottom:6px;font-weight:500}
+.stat-val{font-size:22px;font-weight:700;color:var(--text)}
+
+/* 툴바 */
+.toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.toolbar input[type=text]{flex:1;min-width:140px;font-size:13px;padding:7px 12px;border:1px solid var(--border);border-radius:var(--r);outline:none;background:var(--bg-panel);color:var(--text);transition:border-color .15s}
+.toolbar input[type=text]::placeholder{color:var(--text-sub)}
+.toolbar input[type=text]:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(46,125,50,.15)}
+.toolbar select{font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg-panel);color:var(--text);outline:none}
+.btn{padding:7px 14px;font-size:13px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg-panel);color:var(--text);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s;font-weight:500}
+.btn:hover{background:#e8f0e8;border-color:#a5c8a5}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:#1b5e20;border-color:#1b5e20}
+.btn.danger{color:var(--red);border-color:#6e2222}
+.btn.danger:hover{background:#2a1515;border-color:var(--red)}
+.btn.sm{padding:4px 10px;font-size:12px}
+
+/* 구매자 바 */
+.person-bar{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.person-bar label{font-size:12px;color:var(--text-sub);font-weight:600;white-space:nowrap}
+.person-inputs{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.person-input-wrap{display:flex;align-items:center;gap:6px}
+.person-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.d0{background:#58a6ff}.d1{background:#3fb950}.d2{background:#d29922}
+.person-input-wrap input{font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;width:72px;outline:none;font-family:inherit;background:var(--bg);color:var(--text)}
+.person-input-wrap input:focus{border-color:var(--border-focus)}
+
+/* 추가 패널 */
+.add-panel{background:var(--bg-panel);border-radius:var(--r);padding:16px;margin-bottom:14px;display:none;border:1px solid var(--border-focus)}
+.add-panel.show{display:block}
+.add-panel-title{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--accent)}
+.add-row1{display:grid;grid-template-columns:80px 1fr 80px 80px 80px 100px;gap:8px;align-items:start;margin-bottom:8px}
+.add-row1 input{font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;outline:none;font-family:inherit;width:100%;background:var(--bg);color:var(--text)}
+.add-row1 input:focus{border-color:var(--border-focus)}
+.add-row1 input::placeholder{color:var(--text-sub)}
+.add-sub{font-size:11px;color:var(--text-sub);text-align:center;margin-top:3px}
+.add-photo-btn{width:80px;height:64px;border:1.5px dashed #30363d;border-radius:6px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:var(--text-sub);gap:3px;transition:all .15s}
+.add-photo-btn:hover{border-color:var(--accent);color:var(--accent)}
+.add-photo-preview{width:80px;height:64px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border)}
+
+/* 테이블 */
+.card{background:var(--bg-panel);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+thead tr{background:var(--bg);border-bottom:1px solid var(--border)}
+th{text-align:center;padding:10px 6px;font-weight:600;color:var(--text-sub);font-size:11px;vertical-align:bottom;line-height:1.4}
+th.left{text-align:left}
+td{padding:8px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(0,0,0,.03)}
+.col-chk{width:36px}.col-no{width:36px}.col-photo{width:90px}.col-name{width:auto}
+.col-p{width:100px}.col-price{width:110px}.col-note{width:150px}.col-del{width:130px}
+
+.photo-cell{display:flex;align-items:center;justify-content:center}
+.photo-thumb{width:64px;height:64px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border);transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,border-color .15s;position:relative;z-index:1}
+.photo-thumb:hover{transform:scale(2.8);border-color:var(--accent);box-shadow:0 8px 32px rgba(0,0,0,.3);z-index:100;border-radius:8px}
+.photo-upload-btn{width:64px;height:64px;border:1.5px dashed #30363d;border-radius:6px;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-sub);font-size:22px;line-height:1;transition:all .15s}
+.photo-upload-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* 수량 */
+.qty-wrap{display:flex;flex-direction:column;align-items:center;gap:3px}
+.qty-label{font-size:10px;font-weight:600;color:#fff;padding:2px 6px;border-radius:3px;text-align:center;width:100%}
+.l0{background:#1f6feb}.l1{background:#196c2e}.l2{background:#7d4e17}
+input.qty-in{width:100%;font-size:13px;padding:4px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--text);font-family:inherit;text-align:center;outline:none;font-weight:600}
+input.qty-in:focus{border-color:var(--border-focus);box-shadow:0 0 0 2px rgba(46,125,50,.15)}
+input.name-in{width:100%;font-size:13px;padding:3px 5px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text);font-family:inherit}
+input.name-in:focus{outline:none;border-color:var(--border-focus);background:rgba(46,125,50,.05)}
+input.price-in{width:100%;font-size:12px;padding:3px 4px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--gold);font-family:inherit;text-align:right;font-weight:600}
+input.price-in:focus{outline:none;border-color:var(--border-focus);background:rgba(46,125,50,.05)}
+input.note-in{width:100%;font-size:12px;padding:3px 5px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text-sub);font-family:inherit}
+input.note-in:focus{outline:none;border-color:var(--border-focus);background:rgba(46,125,50,.05)}
+
+/* 카테고리 필터 */
+.cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cat-btn{padding:5px 12px;font-size:12px;border:1px solid var(--border);border-radius:20px;background:var(--bg-panel);color:var(--text-sub);cursor:pointer;transition:all .15s;font-weight:500;white-space:nowrap}
+.cat-btn:hover{border-color:var(--accent);color:var(--accent);background:#e8f5e9}
+.cat-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+
+/* 카테고리 섹션 */
+.section-wrap{margin-bottom:16px}
+.section-header{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 14px;
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  border-bottom:none;
+  border-radius:var(--r) var(--r) 0 0;
+  cursor:pointer;user-select:none;
+}
+.section-header:hover{background:#e8f5e9}
+.section-title{font-size:13px;font-weight:700;color:var(--text);flex:1}
+.section-count{font-size:11px;color:var(--text-sub);background:var(--bg);border:1px solid var(--border);padding:1px 8px;border-radius:10px}
+.section-toggle{font-size:11px;color:var(--text-sub);transition:transform .2s}
+.section-toggle.collapsed{transform:rotate(-90deg)}
+.section-body{border-radius:0 0 var(--r) var(--r);overflow:hidden}
+
+/* 드래그 */
+tr.dragging{opacity:.4}
+tr.drag-over td{background:rgba(46,125,50,.12)!important;border-top:2px solid var(--accent)!important}
+.drop-zone{
+  border:2px dashed var(--border);border-radius:6px;
+  padding:14px;text-align:center;
+  font-size:12px;color:var(--text-sub);
+  margin:4px 0;transition:all .2s;
+}
+.drop-zone.drag-active{border-color:var(--accent);color:var(--accent);background:rgba(46,125,50,.05)}
+
+/* 카테고리 select (행 안) */
+select.cat-in{
+  font-size:11px;padding:3px 4px;
+  border:1px solid transparent;border-radius:4px;
+  background:transparent;color:var(--text-sub);
+  font-family:inherit;cursor:pointer;outline:none;
+  max-width:90px;
+}
+select.cat-in:hover{border-color:var(--border);background:var(--bg)}
+select.cat-in:focus{border-color:var(--border-focus)}
+tfoot tr td{font-weight:600;background:var(--bg);border-top:1px solid var(--border);font-size:12px;text-align:center;color:var(--text-sub)}
+.checked td{opacity:0.3}
+.nodata{text-align:center;padding:2.5rem;color:var(--text-sub);font-size:14px}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.show{display:flex}
+.modal-img{max-width:90vw;max-height:88vh;border-radius:var(--r);object-fit:contain}
+.modal-close{position:fixed;top:16px;right:20px;color:var(--text-sub);font-size:24px;cursor:pointer;z-index:1000;background:var(--bg-panel);border:1px solid var(--border);width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all .15s}
+.modal-close:hover{color:var(--text);border-color:#30363d}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#b0aa98;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#888}
+input[type=checkbox]{accent-color:var(--accent)}
+
+@media(max-width:700px){
+  .summary{grid-template-columns:repeat(2,1fr)}
+  .col-price,.col-note{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>PX 장보기</h1>
+    <span class="badge-px">화장품</span>
+  </div>
+  <p class="sub">사진 업로드 · 사람별 수량 · 비고 직접 입력 가능</p>
+
+  <div class="person-bar">
+    <label>구매자 이름</label>
+    <div class="person-inputs">
+      <div class="person-input-wrap"><div class="person-dot d0"></div><input type="text" id="pname0" value="김" oninput="updateNames()" placeholder="이름1" maxlength="6"></div>
+      <div class="person-input-wrap"><div class="person-dot d1"></div><input type="text" id="pname1" value="송" oninput="updateNames()" placeholder="이름2" maxlength="6"></div>
+      <div class="person-input-wrap"><div class="person-dot d2"></div><input type="text" id="pname2" value="장" oninput="updateNames()" placeholder="이름3" maxlength="6"></div>
+    </div>
+    <span style="font-size:12px;color:#bbb;margin-left:auto">이름을 바꾸면 표에 자동 반영돼요</span>
+  </div>
+
+  <div class="summary">
+    <div class="stat"><div class="stat-label">총 항목</div><div class="stat-val" id="s-count">0</div></div>
+    <div class="stat"><div class="stat-label">총 금액 (추정)</div><div class="stat-val" id="s-total">-</div></div>
+    <div class="stat"><div class="stat-label">완료</div><div class="stat-val" id="s-done">0</div></div>
+    <div class="stat"><div class="stat-label">미완료</div><div class="stat-val" id="s-left">0</div></div>
+  </div>
+
+  <div class="cat-filter" id="cat-filter"></div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="품명 검색..." oninput="render()">
+    <select id="fperson" onchange="render()">
+      <option value="">전체</option>
+      <option value="0" id="fopt0">김</option>
+      <option value="1" id="fopt1">송</option>
+      <option value="2" id="fopt2">장</option>
+    </select>
+    <button class="btn primary" onclick="toggleAdd()">+ 항목 추가</button>
+    <button class="btn" onclick="clearDone()">완료 삭제</button>
+  </div>
+
+  <div class="add-panel" id="add-panel">
+    <div class="add-panel-title">새 항목 추가</div>
+    <div class="add-row1">
+      <div>
+        <div id="add-photo-wrap">
+          <div class="add-photo-btn" onclick="document.getElementById('add-file-inp').click()">
+            <span style="font-size:22px">+</span><span>사진</span>
+          </div>
+        </div>
+        <input type="file" id="add-file-inp" accept="image/*" style="display:none" onchange="previewAdd(this)">
+      </div>
+      <div><input type="text" id="new-name" placeholder="품명 입력"></div>
+      <div>
+        <input type="number" id="new-q0" placeholder="0" min="0" style="text-align:center">
+        <div class="add-sub" id="asub0">김</div>
+      </div>
+      <div>
+        <input type="number" id="new-q1" placeholder="0" min="0" style="text-align:center">
+        <div class="add-sub" id="asub1">송</div>
+      </div>
+      <div>
+        <input type="number" id="new-q2" placeholder="0" min="0" style="text-align:center">
+        <div class="add-sub" id="asub2">장</div>
+      </div>
+      <div><input type="number" id="new-price" placeholder="가격(원)"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+      <label style="font-size:12px;color:var(--text-sub);white-space:nowrap">카테고리</label>
+      <select id="new-cat" style="font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);outline:none;flex:1">
+        <option value="shampoo">🧴 샴푸</option>
+        <option value="sunscreen">☀️ 선크림</option>
+        <option value="cleanser">🫧 클렌징폼</option>
+        <option value="skincare">✨ 스킨/로션</option>
+        <option value="food">🍱 식료품</option>
+        <option value="alcohol">🍺 술</option>
+        <option value="detergent">🧺 세제/섬유</option>
+        <option value="shampoo_body">🚿 샴푸/바디</option>
+        <option value="tissue">🧻 휴지/물티슈</option>
+        <option value="sanitary">🩺 위생용품</option>
+        <option value="icecream">🍦 아이스크림</option>
+        <option value="etc" selected>📦 기타</option>
+      </select>
+    </div>
+    <div>
+      <input type="text" id="new-note" placeholder="비고 메모..." style="width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;outline:none;font-family:inherit">
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn primary" onclick="addItem()">추가</button>
+      <button class="btn" onclick="toggleAdd()">취소</button>
+    </div>
+  </div>
+
+  <div id="sections-wrap"></div>
+</div>
+
+<div class="modal-bg" id="modal" onclick="closeModal()">
+  <span class="modal-close" onclick="closeModal()">&#x2715;</span>
+  <img class="modal-img" id="modal-img" src="" alt="">
+</div>
+
+<script>
+const CATS = [
+  {id:'shampoo', label:'🧴 샴푸'},
+  {id:'sunscreen', label:'☀️ 선크림'},
+  {id:'cleanser', label:'🫧 클렌징폼'},
+  {id:'skincare', label:'✨ 스킨/로션'},
+  {id:'food', label:'🍱 식료품'},
+  {id:'alcohol', label:'🍺 술'},
+  {id:'detergent', label:'🧺 세제/섬유'},
+  {id:'shampoo_body', label:'🚿 샴푸/바디'},
+  {id:'tissue', label:'🧻 휴지/물티슈'},
+  {id:'sanitary', label:'🩺 위생용품'},
+  {id:'icecream', label:'🍦 아이스크림'},
+  {id:'etc', label:'📦 기타'},
+];
+
+let items = [
+  {id:1,name:'마녀공장 퓨리파잉 클렌징 소다폼',qtys:[0,0,0],price:3750,note:'',photo:null,done:false,cat:'cleanser'},
+  {id:2,name:'센텔리안24 마데카 옴므 올인원',qtys:[0,0,0],price:6900,note:'',photo:null,done:false,cat:'skincare'},
+  {id:3,name:'무슈제이 베이직 아쿠아 올인원',qtys:[0,0,0],price:8370,note:'',photo:null,done:false,cat:'skincare'},
+  {id:4,name:'아비브 약산성 ph 시트 마스크 아쿠아핏',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'skincare'},
+  {id:5,name:'라운드랩 약콩 판테놀 크림1+1',qtys:[0,0,0],price:10200,note:'',photo:null,done:false,cat:'skincare'},
+  {id:6,name:'조선미녀 맑은 쌀선크림',qtys:[0,0,0],price:5400,note:'',photo:null,done:false,cat:'sunscreen'},
+  {id:7,name:'마데카 메디패치스팟패치',qtys:[0,0,0],price:2300,note:'',photo:null,done:false,cat:'skincare'},
+  {id:8,name:'라보에이치 샴푸',qtys:[0,0,0],price:6860,note:'',photo:null,done:false,cat:'shampoo'},
+  {id:9,name:'뷰카클래식 치약',qtys:[0,0,0],price:11900,note:'',photo:null,done:false,cat:'etc'},
+  {id:10,name:'아이소이 응급진정 세럼',qtys:[0,0,0],price:8240,note:'',photo:null,done:false,cat:'skincare'},
+  {id:11,name:'아비브 부활초 크림',qtys:[0,0,0],price:9800,note:'',photo:null,done:false,cat:'skincare'},
+  {id:12,name:'듀이트리 스네일 크림',qtys:[0,0,0],price:9880,note:'',photo:null,done:false,cat:'skincare'},
+  {id:13,name:'닥터자르트 하이드라 에센스',qtys:[0,0,0],price:10800,note:'',photo:null,done:false,cat:'skincare'},
+  {id:14,name:'자민경 크레마카라콜 오리지날 프리미어 세트',qtys:[0,0,0],price:20000,note:'',photo:null,done:false,cat:'skincare'},
+  {id:15,name:'퍼퓸 핸드크림 더블유 드레스룸97',qtys:[0,0,0],price:2670,note:'',photo:null,done:false,cat:'skincare'},
+  {id:16,name:'셀라피 에이 리페어 아토로션',qtys:[0,0,0],price:92850,note:'',photo:null,done:false,cat:'skincare'},
+  {id:17,name:'딥클린 아크네 포밍 클렌저',qtys:[0,0,0],price:4390,note:'',photo:null,done:false,cat:'cleanser'},
+  {id:18,name:'마이비데 물티슈',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'etc'},
+  {id:19,name:'아토팜 MLE 로션',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'skincare'},
+  {id:20,name:'아토팜 탑투토 워시',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'cleanser'},
+  {id:21,name:'아토팜 수딩젤',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'skincare'},
+  {id:22,name:'아토팜 MLE 크림',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'skincare'},
+  {id:23,name:'셀퓨전씨 포어 썬 클렌징폼(150ML)',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'cleanser'},
+  {id:24,name:'시카 마일드 폼 클렌저',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'cleanser'},
+  {id:25,name:'메이크프렘 클렌징밀크',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'cleanser'},
+  {id:26,name:'아비브 여성초 패드',qtys:[0,0,0],price:12870,note:'',photo:null,done:false,cat:'skincare'},
+  {id:27,name:'그린핑거 마이키즈 플러스 산리오 고보습 로션',qtys:[0,0,0],price:8800,note:'',photo:null,done:false,cat:'skincare'},
+  {id:28,name:'이니스프리 한란인리치드 에센스',qtys:[0,0,0],price:6550,note:'',photo:null,done:false,cat:'skincare'},
+  {id:29,name:'닥터지 레드 블레미쉬 클리어 크림',qtys:[0,0,0],price:6770,note:'',photo:null,done:false,cat:'skincare'},
+  {id:30,name:'닥터지 로얄 블랙스 네일 크림',qtys:[0,0,0],price:10080,note:'',photo:null,done:false,cat:'skincare'},
+  {id:31,name:'라운드랩 1025 독도 필링젤 기획',qtys:[0,0,0],price:5900,note:'',photo:null,done:false,cat:'skincare'},
+  {id:32,name:'니베아 SOS 케어 핸드크림',qtys:[0,0,0],price:1740,note:'',photo:null,done:false,cat:'skincare'},
+  {id:33,name:'다이아몬드 리페어 퍼펙트 세트',qtys:[0,0,0],price:38930,note:'',photo:null,done:false,cat:'skincare'},
+  {id:34,name:'닥터자르트 에브리 선데이 우터프루프 선밀크',qtys:[0,0,0],price:9600,note:'',photo:null,done:false,cat:'sunscreen'},
+  {id:35,name:'아비브 아크네 폼 클렌저 어성초 폼',qtys:[0,0,0],price:6210,note:'',photo:null,done:false,cat:'cleanser'},
+  {id:36,name:'독도필링젤',qtys:[0,0,0],price:6000,note:'',photo:null,done:false,cat:'skincare'},
+  {id:37,name:'아누아 어성초 80 수분진정 앰플',qtys:[0,0,0],price:7100,note:'',photo:null,done:false,cat:'skincare'},
+  {id:38,name:'닥터지 데일리 올인원 바디로션',qtys:[0,0,0],price:11100,note:'',photo:null,done:false,cat:'skincare'},
+  {id:39,name:'세류전씨 약산성 수분크림',qtys:[0,0,0],price:6990,note:'',photo:null,done:false,cat:'skincare'},
+  {id:40,name:'센텔리안24 링클셀 아이코어 크림',qtys:[0,0,0],price:10900,note:'',photo:null,done:false,cat:'skincare'},
+  {id:41,name:'아이소이 흔적크림(잡티케어)',qtys:[0,0,0],price:11390,note:'',photo:null,done:false,cat:'skincare'},
+  {id:42,name:'아비브 어성초 에센스',qtys:[0,0,0],price:null,note:'',photo:null,done:false,cat:'skincare'},
+  {id:43,name:'새로 소주 병 360ml',qtys:[0,0,0],price:970,note:'15.7도, 제로슈거',photo:null,done:false,cat:'alcohol'},
+  {id:44,name:'새로 소주 페트 640ml',qtys:[0,0,0],price:1720,note:'15.7도, 대용량',photo:null,done:false,cat:'alcohol'},
+  {id:45,name:'선양 소주 병 360ml',qtys:[0,0,0],price:1030,note:'14.9도, 초저도수',photo:null,done:false,cat:'alcohol'},
+  {id:46,name:'선양 소주 페트 400ml',qtys:[0,0,0],price:960,note:'14.9도',photo:null,done:false,cat:'alcohol'},
+  {id:47,name:'선양 린 병 360ml',qtys:[0,0,0],price:1080,note:'16도, 프리미엄라인',photo:null,done:false,cat:'alcohol'},
+  {id:48,name:'시원 소주 병 360ml',qtys:[0,0,0],price:970,note:'19도, 고도수',photo:null,done:false,cat:'alcohol'},
+  {id:49,name:'시원한 청풍 병 360ml',qtys:[0,0,0],price:970,note:'16도, 가성비',photo:null,done:false,cat:'alcohol'},
+  {id:50,name:'잎새주 병 360ml',qtys:[0,0,0],price:1040,note:'16도',photo:null,done:false,cat:'alcohol'},
+  {id:51,name:'좋은 데이 병 360ml',qtys:[0,0,0],price:970,note:'16도',photo:null,done:false,cat:'alcohol'},
+  {id:52,name:'진로 병 360ml',qtys:[0,0,0],price:1090,note:'16도, 두꺼비',photo:null,done:false,cat:'alcohol'},
+  {id:53,name:'참소주 병 360ml',qtys:[0,0,0],price:1040,note:'16도',photo:null,done:false,cat:'alcohol'},
+  {id:54,name:'참이슬 병 360ml',qtys:[0,0,0],price:1090,note:'16도',photo:null,done:false,cat:'alcohol'},
+  {id:55,name:'참이슬 오리지널 병 360ml',qtys:[0,0,0],price:1120,note:'20도, 고도수',photo:null,done:false,cat:'alcohol'},
+  {id:56,name:'참이슬 페트 500ml',qtys:[0,0,0],price:1390,note:'16도',photo:null,done:false,cat:'alcohol'},
+  {id:57,name:'참이슬 페트 640ml',qtys:[0,0,0],price:1770,note:'16도, 대용량',photo:null,done:false,cat:'alcohol'},
+  {id:58,name:'처음처럼 병 360ml',qtys:[0,0,0],price:1110,note:'16도, 알칼리수',photo:null,done:false,cat:'alcohol'},
+  {id:59,name:'처음처럼 페트 640ml',qtys:[0,0,0],price:1720,note:'16도, 대용량',photo:null,done:false,cat:'alcohol'},
+  {id:60,name:'독도소주 37도 375ml',qtys:[0,0,0],price:15730,note:'37도, 증류식',photo:null,done:false,cat:'alcohol'},
+  {id:61,name:'기원 호랑이 KI ONE TIGER 700ml',qtys:[0,0,0],price:70090,note:'40도, 쌀증류 프리미엄',photo:null,done:false,cat:'alcohol'},
+  {id:62,name:'대장솔주 500ml',qtys:[0,0,0],price:32000,note:'40도, 솔향',photo:null,done:false,cat:'alcohol'},
+  {id:63,name:'원소주 오리지널 375ml',qtys:[0,0,0],price:10430,note:'22도, 쌀증류',photo:null,done:false,cat:'alcohol'},
+  {id:64,name:'일품진로 375ml',qtys:[0,0,0],price:8610,note:'25도, 참나무통숙성',photo:null,done:false,cat:'alcohol'},
+  {id:65,name:'화요 25도 750ml',qtys:[0,0,0],price:16300,note:'25도, 선물추천',photo:null,done:false,cat:'alcohol'},
+  {id:66,name:'화요 41도 750ml',qtys:[0,0,0],price:33440,note:'41도, 고도수 선물',photo:null,done:false,cat:'alcohol'},
+  {id:67,name:'화요 53도 500ml',qtys:[0,0,0],price:36600,note:'53도, 최고도수',photo:null,done:false,cat:'alcohol'},
+  {id:68,name:'테라 캔맥주 355ml',qtys:[0,0,0],price:1030,note:'4.6도, 리얼탄산',photo:null,done:false,cat:'alcohol'},
+  {id:69,name:'카스 캔맥주 355ml',qtys:[0,0,0],price:1260,note:'4.5도',photo:null,done:false,cat:'alcohol'},
+  {id:70,name:'카스 캔맥주 500ml',qtys:[0,0,0],price:1540,note:'4.5도, 가성비',photo:null,done:false,cat:'alcohol'},
+  {id:71,name:'카스 맥주 병 500ml',qtys:[0,0,0],price:1360,note:'4.5도, 병맥',photo:null,done:false,cat:'alcohol'},
+  {id:72,name:'아사히 수퍼드라이 생맥주캔 340ml',qtys:[0,0,0],price:1750,note:'5도, 일본',photo:null,done:false,cat:'alcohol'},
+  {id:73,name:'코젤 다크 캔 500ml',qtys:[0,0,0],price:1980,note:'3.8도, 체코 흑맥주',photo:null,done:false,cat:'alcohol'},
+  {id:74,name:'코젤 프리미엄 라거 캔 500ml',qtys:[0,0,0],price:1980,note:'4.6도, 체코',photo:null,done:false,cat:'alcohol'},
+  {id:75,name:'삿포로 프리미엄 생맥주캔 500ml',qtys:[0,0,0],price:2130,note:'5도, 일본 프리미엄',photo:null,done:false,cat:'alcohol'},
+  {id:76,name:'에비스 캔 500ml',qtys:[0,0,0],price:2290,note:'5도, 100%몰트',photo:null,done:false,cat:'alcohol'},
+  {id:77,name:'하이네켄 오리지널 캔 330ml',qtys:[0,0,0],price:1290,note:'5도, 네덜란드',photo:null,done:false,cat:'alcohol'},
+  {id:78,name:'로얄 샬루트 21년 700ml',qtys:[0,0,0],price:178000,note:'40도, 선물★★★★★',photo:null,done:false,cat:'alcohol'},
+  {id:79,name:'발렌타인 21년 700ml',qtys:[0,0,0],price:165000,note:'40도, 선물★★★★★',photo:null,done:false,cat:'alcohol'},
+  {id:80,name:'스카치블루 21년 700ml',qtys:[0,0,0],price:89740,note:'40도, 선물★★★★',photo:null,done:false,cat:'alcohol'},
+  {id:81,name:'조니워커 18년 750ml',qtys:[0,0,0],price:112570,note:'40도, 선물★★★★★',photo:null,done:false,cat:'alcohol'},
+  {id:82,name:'조니워커 골드리저브 750ml',qtys:[0,0,0],price:53190,note:'40도, 선물★★★★',photo:null,done:false,cat:'alcohol'},
+  {id:83,name:'글렌고인 싱글몰트 12년 700ml',qtys:[0,0,0],price:67340,note:'43도, 셰리캐스크',photo:null,done:false,cat:'alcohol'},
+  {id:84,name:'더 글렌 그랜트 아보랄리스 싱글몰트 700ml',qtys:[0,0,0],price:39120,note:'40도, 입문용',photo:null,done:false,cat:'alcohol'},
+  {id:85,name:'듀어스 12년 700ml',qtys:[0,0,0],price:34070,note:'40도, 더블에이징',photo:null,done:false,cat:'alcohol'},
+  {id:86,name:'라가불린 8년 700ml',qtys:[0,0,0],price:72680,note:'48도, 스모키',photo:null,done:false,cat:'alcohol'},
+  {id:87,name:'싱글톤 더프타운 12년 700ml',qtys:[0,0,0],price:44980,note:'40도, 입문자적합',photo:null,done:false,cat:'alcohol'},
+  {id:88,name:'와일드 터키 101 8년 700ml',qtys:[0,0,0],price:35780,note:'50.5도, 버번',photo:null,done:false,cat:'alcohol'},
+  {id:89,name:'윈저 21년 500ml',qtys:[0,0,0],price:64140,note:'40도, 선물★★★★★',photo:null,done:false,cat:'alcohol'},
+  {id:90,name:'가브리엘 XO 700ml',qtys:[0,0,0],price:75340,note:'40도, XO브랜디',photo:null,done:false,cat:'alcohol'},
+  {id:91,name:'까뮤 꼬냑 VSOP 700ml',qtys:[0,0,0],price:74620,note:'40도, 클래식',photo:null,done:false,cat:'alcohol'},
+  {id:92,name:'꼬냑 랑디 XO 700ml',qtys:[0,0,0],price:199010,note:'40도, 프리미엄 선물★★★★★',photo:null,done:false,cat:'alcohol'},
+  {id:93,name:'세인트레미 XO 700ml',qtys:[0,0,0],price:29900,note:'40도, 가성비',photo:null,done:false,cat:'alcohol'},
+  {id:94,name:'파스칼 XO GOLD 700ml',qtys:[0,0,0],price:49860,note:'40도, 선물용',photo:null,done:false,cat:'alcohol'},
+  {id:95,name:'로얄오크 프리미엄 하이볼 350ml',qtys:[0,0,0],price:3300,note:'7도, RTD',photo:null,done:false,cat:'alcohol'},
+  {id:96,name:'스카치 하이 레몬 355ml',qtys:[0,0,0],price:1550,note:'7도, 상큼',photo:null,done:false,cat:'alcohol'},
+  {id:97,name:'실론티 하이볼 캔 500ml',qtys:[0,0,0],price:1460,note:'5도, 홍차베이스',photo:null,done:false,cat:'alcohol'},
+  {id:98,name:'솔의 눈 하이볼 캔 500ml',qtys:[0,0,0],price:1460,note:'5도, 이색하이볼',photo:null,done:false,cat:'alcohol'},
+  {id:99,name:'봄베이 사파이어 750ml',qtys:[0,0,0],price:21400,note:'40도, 런던드라이진',photo:null,done:false,cat:'alcohol'},
+  {id:100,name:'스미노프 그린애플 700ml',qtys:[0,0,0],price:20290,note:'35도, 플레이버보드카',photo:null,done:false,cat:'alcohol'},
+  {id:101,name:'엑스레이티드 375ml',qtys:[0,0,0],price:16380,note:'17도, 과일리큐르',photo:null,done:false,cat:'alcohol'},
+  {id:102,name:'호세쿠엘보 에스페샬 레포사도 750ml',qtys:[0,0,0],price:21090,note:'38도, 데킬라',photo:null,done:false,cat:'alcohol'},
+  {id:103,name:'그랑 드 빠니사 그라나차 750ml',qtys:[0,0,0],price:10970,note:'14도, 레드와인 스페인',photo:null,done:false,cat:'alcohol'},
+  {id:104,name:'라파우라 스프링스 소비뇽 블랑 750ml',qtys:[0,0,0],price:17980,note:'13도, 화이트와인',photo:null,done:false,cat:'alcohol'},
+  {id:105,name:'마르께스 데 몬떼메루 그랑셀렉시옹 750ml',qtys:[0,0,0],price:15360,note:'13.5도, 레드와인',photo:null,done:false,cat:'alcohol'},
+  {id:106,name:'쌍떼 와인 750ml',qtys:[0,0,0],price:11260,note:'12도, 데일리레드',photo:null,done:false,cat:'alcohol'},
+  {id:107,name:'얄리 프리미엄 리미티드 에디션 750ml',qtys:[0,0,0],price:28660,note:'14도, 레드와인 칠레',photo:null,done:false,cat:'alcohol'},
+  {id:108,name:'카사블랑카 화이트와인 750ml',qtys:[0,0,0],price:10620,note:'13도, 화이트와인',photo:null,done:false,cat:'alcohol'},
+  {id:109,name:'파스쿠아 스위트 로제 750ml',qtys:[0,0,0],price:15500,note:'11.5도, 로제',photo:null,done:false,cat:'alcohol'},
+  {id:110,name:'공부가주 500ml',qtys:[0,0,0],price:11650,note:'38도, 입문용 고량주',photo:null,done:false,cat:'alcohol'},
+  {id:111,name:'귀주주중주 500ml',qtys:[0,0,0],price:17200,note:'53도, 프리미엄 백주',photo:null,done:false,cat:'alcohol'},
+  {id:112,name:'라오왕 연태구냥 플러스 500ml',qtys:[0,0,0],price:11880,note:'34도, 순한 고량주',photo:null,done:false,cat:'alcohol'},
+  {id:113,name:'구로 기리시마 720ml',qtys:[0,0,0],price:31360,note:'25도, 일본 고구마소주',photo:null,done:false,cat:'alcohol'},
+  {id:114,name:'백세주 375ml',qtys:[0,0,0],price:3010,note:'13도, 전통약주',photo:null,done:false,cat:'alcohol'},
+  {id:115,name:'별빛 청하 295ml',qtys:[0,0,0],price:1250,note:'7도, 탄산청주',photo:null,done:false,cat:'alcohol'},
+  {id:116,name:'비잔 크리어 720ml',qtys:[0,0,0],price:19040,note:'25도, 일본증류소주',photo:null,done:false,cat:'alcohol'},
+  {id:117,name:'사화 유자 500ml',qtys:[0,0,0],price:12960,note:'14도, 유자리큐르',photo:null,done:false,cat:'alcohol'},
+  {id:118,name:'순하리 레몬 진 355ml',qtys:[0,0,0],price:630,note:'7도, RTD',photo:null,done:false,cat:'alcohol'},
+  {id:119,name:'심술7 330ml',qtys:[0,0,0],price:1760,note:'7도, 사과과실주',photo:null,done:false,cat:'alcohol'},
+  {id:120,name:'월계관 준마이 사케 750ml',qtys:[0,0,0],price:11690,note:'14.5도, 가성비사케',photo:null,done:false,cat:'alcohol'},
+  {id:121,name:'청하 화인 300ml',qtys:[0,0,0],price:1600,note:'13도, 청주',photo:null,done:false,cat:'alcohol'},
+  {id:122,name:'쿠보타 만쥬 사케 720ml',qtys:[0,0,0],price:97020,note:'15도, 다이긴죠 프리미엄',photo:null,done:false,cat:'alcohol'},
+  {id:123,name:'보해 복분자주 375ml',qtys:[0,0,0],price:6000,note:'15도, 선물/디저트용',photo:null,done:false,cat:'alcohol'},
+  {id:124,name:'가평 잣 막걸리 캔 350ml',qtys:[0,0,0],price:930,note:'6도, 고소한향',photo:null,done:false,cat:'alcohol'},
+  {id:125,name:'골목 막걸리 오리지널 750ml',qtys:[0,0,0],price:1600,note:'6도, 백종원골목식당',photo:null,done:false,cat:'alcohol'},
+  {id:126,name:'국순당 쌀 막걸리 750ml',qtys:[0,0,0],price:1180,note:'6도',photo:null,done:false,cat:'alcohol'},
+  {id:127,name:'국순당 쌀 막걸리 캔 350ml',qtys:[0,0,0],price:830,note:'6도, 캔타입',photo:null,done:false,cat:'alcohol'},
+  {id:128,name:'나루 생막걸리 800ml',qtys:[0,0,0],price:4920,note:'6도, 비살균생막걸리★★★★★',photo:null,done:false,cat:'alcohol'},
+  {id:129,name:'느린 마을 늘봄 막걸리 750ml',qtys:[0,0,0],price:1650,note:'6도, 입문자추천',photo:null,done:false,cat:'alcohol'},
+  {id:130,name:'지평생 막걸리 쌀 750ml',qtys:[0,0,0],price:1430,note:'6도, 전통누룩',photo:null,done:false,cat:'alcohol'},
+  {id:131,name:'톡 쏘는 쌀 막걸리 950ml',qtys:[0,0,0],price:1130,note:'5~6도, 탄산강함',photo:null,done:false,cat:'alcohol'},
+  {id:132,name:'닥터지 로얄 블랙 스네일 스페셜 세트',qtys:[0,0,0],price:21400,note:'',photo:null,done:false,cat:'skincare'},
+  {id:133,name:'동인비 현 올인원 플루이드 세트',qtys:[0,0,0],price:19500,note:'',photo:null,done:false,cat:'skincare'},
+  {id:134,name:'끌레드벨 프레스티지 골드 리프팅 크림 세트',qtys:[0,0,0],price:10360,note:'',photo:null,done:false,cat:'skincare'},
+  {id:135,name:'아비브 어성초 스팟패드 카밍터치 140매',qtys:[0,0,0],price:12870,note:'대용량',photo:null,done:false,cat:'skincare'},
+  {id:136,name:'엘렌실라 프리스티지에 스카르고 리페어크림',qtys:[0,0,0],price:8900,note:'',photo:null,done:false,cat:'skincare'},
+  {id:137,name:'아이소이 탄력크림EX',qtys:[0,0,0],price:14090,note:'',photo:null,done:false,cat:'skincare'},
+  {id:138,name:'아이소이 블레미쉬 케어 업 크림',qtys:[0,0,0],price:11390,note:'',photo:null,done:false,cat:'skincare'},
+  {id:139,name:'아이소이 장수진 수분크림',qtys:[0,0,0],price:9270,note:'',photo:null,done:false,cat:'skincare'},
+  {id:140,name:'닥터지 더 모이스쳐 배리어 디 멀티밤',qtys:[0,0,0],price:7540,note:'',photo:null,done:false,cat:'skincare'},
+  {id:141,name:'어성초 시카 쿨링 수분크림',qtys:[0,0,0],price:5510,note:'',photo:null,done:false,cat:'skincare'},
+  {id:142,name:'아비브 어성초 에센스 카핑펌프 기획 50ml+50ml',qtys:[0,0,0],price:7990,note:'',photo:null,done:false,cat:'skincare'},
+  {id:143,name:'라운드랩 약콩 판테놀 크림 1+1 기획',qtys:[0,0,0],price:10200,note:'',photo:null,done:false,cat:'skincare'},
+  {id:144,name:'닥터지 레드 블레미쉬 클리어 액티브 에센스',qtys:[0,0,0],price:10800,note:'',photo:null,done:false,cat:'skincare'},
+  {id:145,name:'에스네이쳐 아쿠아 스쿠알란 수분크림',qtys:[0,0,0],price:7200,note:'',photo:null,done:false,cat:'skincare'},
+  {id:146,name:'닥터자르트 트리트먼트 에센스',qtys:[0,0,0],price:10800,note:'',photo:null,done:false,cat:'skincare'},
+  {id:147,name:'셀퓨젼씨 약산성 클리어 수분크림',qtys:[0,0,0],price:6990,note:'',photo:null,done:false,cat:'skincare'},
+  {id:148,name:'닥터지 그린마일드 업선스틱',qtys:[0,0,0],price:7900,note:'',photo:null,done:false,cat:'sunscreen'},
+  {id:149,name:'듀이트리 어반 쉐이드 쿨 카밍 선스틱',qtys:[0,0,0],price:6300,note:'',photo:null,done:false,cat:'sunscreen'},
+  {id:150,name:'미샤 올어라운드 세이프블록 아쿠아선',qtys:[0,0,0],price:4200,note:'',photo:null,done:false,cat:'sunscreen'},
+  {id:151,name:'닥터지 메디유브이 울트라선',qtys:[0,0,0],price:4750,note:'',photo:null,done:false,cat:'sunscreen'},
+  {id:152,name:'셀퓨전씨 어드밴스드 클리어 썬스크린 기획세트',qtys:[0,0,0],price:9900,note:'',photo:null,done:false,cat:'sunscreen'},
+  {id:153,name:'아비브 콜라겐 겔마스크 수분초 젤리',qtys:[0,0,0],price:1500,note:'마스크팩',photo:null,done:false,cat:'skincare'},
+  {id:154,name:'아비브 약산성 pH 시트 마스크 어성초 핏',qtys:[0,0,0],price:1000,note:'마스크팩',photo:null,done:false,cat:'skincare'},
+  {id:155,name:'아누아 어성초 77 진정 마스크 골드 콜라겐 앰플 마스크',qtys:[0,0,0],price:520,note:'마스크팩',photo:null,done:false,cat:'skincare'},
+  {id:156,name:'라운드랩 1025 독도 클렌저',qtys:[0,0,0],price:5300,note:'',photo:null,done:false,cat:'cleanser'},
+  {id:157,name:'시루콧토 솜',qtys:[0,0,0],price:2640,note:'',photo:null,done:false,cat:'etc'},
+  {id:158,name:'후가글액',qtys:[0,0,0],price:1950,note:'가글',photo:null,done:false,cat:'etc'},
+  {id:159,name:'리스테린 토탈케어 플러스',qtys:[0,0,0],price:3440,note:'가글',photo:null,done:false,cat:'etc'},
+  {id:160,name:'리스테린 쿨민트',qtys:[0,0,0],price:3150,note:'가글',photo:null,done:false,cat:'etc'},
+  {id:161,name:'가그린 제로',qtys:[0,0,0],price:2300,note:'가글',photo:null,done:false,cat:'etc'},
+  {id:162,name:'클리오센스 R',qtys:[0,0,0],price:1200,note:'',photo:null,done:false,cat:'etc'},
+  {id:163,name:'니베아 데오드란트 스틱 드라이 앤 컴포트',qtys:[0,0,0],price:4580,note:'',photo:null,done:false,cat:'etc'},
+  {id:164,name:'니베아 데오드란트 스프레이 드라이컴포트',qtys:[0,0,0],price:4460,note:'',photo:null,done:false,cat:'etc'},
+  {id:165,name:'미니스 여행용 세트',qtys:[0,0,0],price:5390,note:'',photo:null,done:false,cat:'etc'},
+  {id:166,name:'테니스 카카오 여행용 세트 콤팩트',qtys:[0,0,0],price:7000,note:'',photo:null,done:false,cat:'etc'},
+  {id:167,name:'냉동 삼겹살',qtys:[0,0,0],price:10490,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:168,name:'냉동 대패삼겹살',qtys:[0,0,0],price:13070,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:169,name:'오뚜기 감자떡만두',qtys:[0,0,0],price:2280,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:170,name:'취영루 물만두 2세트',qtys:[0,0,0],price:2880,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:171,name:'김치떡만두국',qtys:[0,0,0],price:2980,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:172,name:'갈비 왕교자',qtys:[0,0,0],price:4000,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:173,name:'비비고 김치 왕교자',qtys:[0,0,0],price:5740,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:174,name:'비비고 매운 왕교자',qtys:[0,0,0],price:5030,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:175,name:'비비고 왕교자',qtys:[0,0,0],price:2480,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:176,name:'비비고 남도 떡갈비',qtys:[0,0,0],price:5700,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:177,name:'비비고 언양식 바싹 불고기',qtys:[0,0,0],price:4510,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:178,name:'오뚜기 옛날 떡갈비',qtys:[0,0,0],price:3110,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:179,name:'맛있는 옛날 물만두',qtys:[0,0,0],price:3660,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:180,name:'맛있는 옛날 새우홍게살 교자만두',qtys:[0,0,0],price:3350,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:181,name:'매콤 후라이드 치킨2',qtys:[0,0,0],price:6420,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:182,name:'맛있는 옛날 떡갈비',qtys:[0,0,0],price:3110,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:183,name:'만두칼국수',qtys:[0,0,0],price:8890,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:184,name:'청정원 서울식 소불고기전골',qtys:[0,0,0],price:9620,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:185,name:'청정원 낙곱새전골',qtys:[0,0,0],price:10420,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:186,name:'육칼전골',qtys:[0,0,0],price:10890,note:'냉동',photo:null,done:false,cat:'food'},
+  {id:187,name:'뉴케어 미니 구수한맛',qtys:[0,0,0],price:1040,note:'두유',photo:null,done:false,cat:'food'},
+  {id:188,name:'뉴케어 검은깨맛 미니',qtys:[0,0,0],price:1040,note:'두유',photo:null,done:false,cat:'food'},
+  {id:189,name:'마이밀 뉴프로틴 오리지널',qtys:[0,0,0],price:990,note:'프로틴',photo:null,done:false,cat:'food'},
+  {id:190,name:'베지밀 검은콩과16곡 팩',qtys:[0,0,0],price:490,note:'두유',photo:null,done:false,cat:'food'},
+  {id:191,name:'뉴핏자',qtys:[0,0,0],price:1100,note:'빵',photo:null,done:false,cat:'food'},
+  {id:192,name:'땅콩 미니샌드',qtys:[0,0,0],price:950,note:'빵',photo:null,done:false,cat:'food'},
+  {id:193,name:'플레인 소시지빵',qtys:[0,0,0],price:1250,note:'빵',photo:null,done:false,cat:'food'},
+  {id:194,name:'달콤롱 초코',qtys:[0,0,0],price:1050,note:'빵',photo:null,done:false,cat:'food'},
+  {id:195,name:'몽슈 5입 세트',qtys:[0,0,0],price:3480,note:'빵',photo:null,done:false,cat:'food'},
+  {id:196,name:'달콤품은 미니언',qtys:[0,0,0],price:3258,note:'빵',photo:null,done:false,cat:'food'},
+  {id:197,name:'글레이즈 화이트링',qtys:[0,0,0],price:1370,note:'빵',photo:null,done:false,cat:'food'},
+  {id:198,name:'오븐에 구운 도넛',qtys:[0,0,0],price:490,note:'빵',photo:null,done:false,cat:'food'},
+  {id:199,name:'카스테라롤',qtys:[0,0,0],price:1180,note:'빵',photo:null,done:false,cat:'food'},
+  {id:200,name:'초코 카스테라롤',qtys:[0,0,0],price:1330,note:'빵',photo:null,done:false,cat:'food'},
+  {id:201,name:'허쉬 초코볼',qtys:[0,0,0],price:1080,note:'빵',photo:null,done:false,cat:'food'},
+  {id:202,name:'초코소라빵',qtys:[0,0,0],price:740,note:'빵',photo:null,done:false,cat:'food'},
+  {id:203,name:'허쉬 초코샌드',qtys:[0,0,0],price:1190,note:'빵',photo:null,done:false,cat:'food'},
+  {id:204,name:'햄엔치즈 크로켓',qtys:[0,0,0],price:1120,note:'빵',photo:null,done:false,cat:'food'},
+  {id:205,name:'명가명품 우리벌꿀 카스테라',qtys:[0,0,0],price:8190,note:'빵',photo:null,done:false,cat:'food'},
+  {id:206,name:'명가명품 제주말차 카스테라',qtys:[0,0,0],price:8920,note:'빵',photo:null,done:false,cat:'food'},
+  {id:207,name:'호두 파운드케익',qtys:[0,0,0],price:9120,note:'빵',photo:null,done:false,cat:'food'},
+  {id:208,name:'진한풍미가득 정통 파운드케익',qtys:[0,0,0],price:8960,note:'빵',photo:null,done:false,cat:'food'},
+  {id:209,name:'로스팅 호두 듬뿍 호두파이',qtys:[0,0,0],price:16730,note:'빵',photo:null,done:false,cat:'food'},
+  {id:210,name:'뚜레쥬르 크림치즈 머핀',qtys:[0,0,0],price:2170,note:'빵',photo:null,done:false,cat:'food'},
+  {id:211,name:'클래식 롤케이크',qtys:[0,0,0],price:8530,note:'빵',photo:null,done:false,cat:'food'},
+  {id:212,name:'허니 카스테라',qtys:[0,0,0],price:3400,note:'빵',photo:null,done:false,cat:'food'},
+  {id:213,name:'오즈키친 치킨마크니',qtys:[0,0,0],price:1790,note:'',photo:null,done:false,cat:'food'},
+  {id:214,name:'오뚜기 숙성카레 순한맛',qtys:[0,0,0],price:3420,note:'',photo:null,done:false,cat:'food'},
+  {id:215,name:'밥이랑 야채맛',qtys:[0,0,0],price:1600,note:'',photo:null,done:false,cat:'food'},
+  {id:216,name:'비비고 소고기 장조림',qtys:[0,0,0],price:2500,note:'',photo:null,done:false,cat:'food'},
+  {id:217,name:'청정원 밥엔야채',qtys:[0,0,0],price:1800,note:'',photo:null,done:false,cat:'food'},
+  {id:218,name:'백설 밥이랑야채',qtys:[0,0,0],price:1600,note:'',photo:null,done:false,cat:'food'},
+  {id:219,name:'빵빠레 아이스크림',qtys:[0,0,0],price:630,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:220,name:'오레오쿠키 아이스크림',qtys:[0,0,0],price:1300,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:221,name:'팥빙수 아이스크림',qtys:[0,0,0],price:1000,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:222,name:'나뚜루 마차바',qtys:[0,0,0],price:1480,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:223,name:'하겐다즈 쿠키앤크림 3입',qtys:[0,0,0],price:4650,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:224,name:'하겐다즈 스트로베리 3입',qtys:[0,0,0],price:4650,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:225,name:'더단백 아이스크림',qtys:[0,0,0],price:1020,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:226,name:'찰떡 아이스',qtys:[0,0,0],price:480,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:227,name:'하겐다즈 바닐라카라멜아몬드',qtys:[0,0,0],price:1570,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:228,name:'하겐다즈 스트로베리 앤 크림',qtys:[0,0,0],price:1570,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:229,name:'제로 아이스크림',qtys:[0,0,0],price:3850,note:'아이스크림',photo:null,done:false,cat:'icecream'},
+  {id:230,name:'홈스타 바이럭스 욕실용 750ml',qtys:[0,0,0],price:4290,note:'욕실세제',photo:null,done:false,cat:'detergent'},
+  {id:231,name:'유한락스 욕실청소용 715ml',qtys:[0,0,0],price:4010,note:'',photo:null,done:false,cat:'detergent'},
+  {id:232,name:'무균무때 곰팡이용 500ml',qtys:[0,0,0],price:1800,note:'',photo:null,done:false,cat:'detergent'},
+  {id:233,name:'유한락스',qtys:[0,0,0],price:1630,note:'',photo:null,done:false,cat:'detergent'},
+  {id:234,name:'무균무때 뿌리는 락스세제',qtys:[0,0,0],price:2600,note:'',photo:null,done:false,cat:'detergent'},
+  {id:235,name:'홈스타 살균세정티슈 기름찌든때용',qtys:[0,0,0],price:4290,note:'',photo:null,done:false,cat:'detergent'},
+  {id:236,name:'생활공작소 변기세정제',qtys:[0,0,0],price:6120,note:'',photo:null,done:false,cat:'detergent'},
+  {id:237,name:'바르는 비트',qtys:[0,0,0],price:2070,note:'얼룩제거',photo:null,done:false,cat:'detergent'},
+  {id:238,name:'비트 O2 500ml',qtys:[0,0,0],price:3030,note:'',photo:null,done:false,cat:'detergent'},
+  {id:239,name:'드릴펄 1L',qtys:[0,0,0],price:1800,note:'세탁세제',photo:null,done:false,cat:'detergent'},
+  {id:240,name:'비트O2 산소표백제 3kg',qtys:[0,0,0],price:7500,note:'',photo:null,done:false,cat:'detergent'},
+  {id:241,name:'한입 베이킹소다',qtys:[0,0,0],price:5740,note:'',photo:null,done:false,cat:'detergent'},
+  {id:242,name:'한입 100% 과탄산소다 1kg',qtys:[0,0,0],price:3250,note:'',photo:null,done:false,cat:'detergent'},
+  {id:243,name:'테크 슈퍼볼 캡슐세제 30개입',qtys:[0,0,0],price:5080,note:'',photo:null,done:false,cat:'detergent'},
+  {id:244,name:'액츠 캡슐세제 딥클린 28개입',qtys:[0,0,0],price:5500,note:'',photo:null,done:false,cat:'detergent'},
+  {id:245,name:'워시앤위시 캡슐세제 32개입',qtys:[0,0,0],price:7920,note:'',photo:null,done:false,cat:'detergent'},
+  {id:246,name:'테크 울드라이 1.3L 리필',qtys:[0,0,0],price:3470,note:'울세탁',photo:null,done:false,cat:'detergent'},
+  {id:247,name:'울샴푸 리필 1.3L',qtys:[0,0,0],price:2890,note:'울세탁',photo:null,done:false,cat:'detergent'},
+  {id:248,name:'울터치 실내건조용 1.3L',qtys:[0,0,0],price:2700,note:'',photo:null,done:false,cat:'detergent'},
+  {id:249,name:'에코버 울세탁세제 허니튜 750ml',qtys:[0,0,0],price:4230,note:'',photo:null,done:false,cat:'detergent'},
+  {id:250,name:'피지 파워시트 라벤더 30매',qtys:[0,0,0],price:5930,note:'세탁시트',photo:null,done:false,cat:'detergent'},
+  {id:251,name:'피지 파워시트 프레쉬 듀얼 30매',qtys:[0,0,0],price:5930,note:'세탁시트',photo:null,done:false,cat:'detergent'},
+  {id:252,name:'테크 파워시트 특유취제거 30매',qtys:[0,0,0],price:6490,note:'세탁시트',photo:null,done:false,cat:'detergent'},
+  {id:253,name:'테크 간편시트 후레쉬브리즈 20매',qtys:[0,0,0],price:3500,note:'세탁시트',photo:null,done:false,cat:'detergent'},
+  {id:254,name:'테크 베이킹소다+구연산 액체세제 3L',qtys:[0,0,0],price:4600,note:'',photo:null,done:false,cat:'detergent'},
+  {id:255,name:'테크 특유취 제거 2.7L',qtys:[0,0,0],price:8900,note:'',photo:null,done:false,cat:'detergent'},
+  {id:256,name:'리큐 제프 프로 파워샷 675ml',qtys:[0,0,0],price:7150,note:'',photo:null,done:false,cat:'detergent'},
+  {id:257,name:'비트 트리플액션 드럼 2.8L',qtys:[0,0,0],price:5070,note:'',photo:null,done:false,cat:'detergent'},
+  {id:258,name:'비트 트리플액션 일반 2.8L',qtys:[0,0,0],price:5070,note:'',photo:null,done:false,cat:'detergent'},
+  {id:259,name:'비트 아로마웨이브 드럼 3L',qtys:[0,0,0],price:6810,note:'',photo:null,done:false,cat:'detergent'},
+  {id:260,name:'비트 아로마웨이브 일반 3L',qtys:[0,0,0],price:7120,note:'',photo:null,done:false,cat:'detergent'},
+  {id:261,name:'비트액체 제로 3L',qtys:[0,0,0],price:5880,note:'',photo:null,done:false,cat:'detergent'},
+  {id:262,name:'액츠 프리미엄젤 프레시 2.7L',qtys:[0,0,0],price:5200,note:'',photo:null,done:false,cat:'detergent'},
+  {id:263,name:'테크 블랙라벨 액체세제 드럼 2.4L',qtys:[0,0,0],price:5900,note:'',photo:null,done:false,cat:'detergent'},
+  {id:264,name:'테크 베이킹구연산 드럼 3L',qtys:[0,0,0],price:5940,note:'',photo:null,done:false,cat:'detergent'},
+  {id:265,name:'액츠 프리미엄젤 프레쉬 실내건조 1L',qtys:[0,0,0],price:2690,note:'',photo:null,done:false,cat:'detergent'},
+  {id:266,name:'액츠 빨래냄새 제거 실내건조 2.2L',qtys:[0,0,0],price:2800,note:'',photo:null,done:false,cat:'detergent'},
+  {id:267,name:'액츠 퍼펙트 베이킹 묵은때얼룩제거 2L',qtys:[0,0,0],price:2800,note:'',photo:null,done:false,cat:'detergent'},
+  {id:268,name:'액츠 퍼펙트 찌든때 딥클린 2L',qtys:[0,0,0],price:2800,note:'',photo:null,done:false,cat:'detergent'},
+  {id:269,name:'홈스타 락스와제페 플로럴 750ml',qtys:[0,0,0],price:2170,note:'',photo:null,done:false,cat:'detergent'},
+  {id:270,name:'비트 진드기 액체세제 드럼 3L',qtys:[0,0,0],price:6500,note:'',photo:null,done:false,cat:'detergent'},
+  {id:271,name:'피죤 고농축 섬유유연제 1.6L',qtys:[0,0,0],price:2700,note:'섬유유연제',photo:null,done:false,cat:'detergent'},
+  {id:272,name:'르샤트라 섬유유연제 피오니부케 1.6L',qtys:[0,0,0],price:2530,note:'섬유유연제',photo:null,done:false,cat:'detergent'},
+  {id:273,name:'피죤 고농축 섬유유연제 2.3L',qtys:[0,0,0],price:4490,note:'섬유유연제',photo:null,done:false,cat:'detergent'},
+  {id:274,name:'르샤트라 섬유유연제 라벤더부케 1.6L',qtys:[0,0,0],price:2800,note:'섬유유연제',photo:null,done:false,cat:'detergent'},
+  {id:275,name:'아우라 햇살실내건조 섬유유연제 2L',qtys:[0,0,0],price:7590,note:'섬유유연제',photo:null,done:false,cat:'detergent'},
+  {id:276,name:'샤프란 아우라 섬유유연제 2.6L',qtys:[0,0,0],price:6500,note:'섬유유연제',photo:null,done:false,cat:'detergent'},
+  {id:277,name:'건조기용 피죤 40매',qtys:[0,0,0],price:2650,note:'건조기시트',photo:null,done:false,cat:'detergent'},
+  {id:278,name:'건조기용 피죤 120매',qtys:[0,0,0],price:6400,note:'건조기시트',photo:null,done:false,cat:'detergent'},
+  {id:279,name:'르샤트라 드라이시트 120매',qtys:[0,0,0],price:7590,note:'건조기시트',photo:null,done:false,cat:'detergent'},
+  {id:280,name:'샤프란 건조기시트 50매',qtys:[0,0,0],price:3600,note:'건조기시트',photo:null,done:false,cat:'detergent'},
+  {id:281,name:'슈가버블 친환경 주방세제 940ml',qtys:[0,0,0],price:2760,note:'주방세제',photo:null,done:false,cat:'detergent'},
+  {id:282,name:'에코버 올인원 식기세척기세제 500g',qtys:[0,0,0],price:8200,note:'식세기세제',photo:null,done:false,cat:'detergent'},
+  {id:283,name:'자연퐁 스팀워시 식세기세제 550g',qtys:[0,0,0],price:8120,note:'식세기세제',photo:null,done:false,cat:'detergent'},
+  {id:284,name:'참그린 베이킹소다&구연산 주방세제 1.2L',qtys:[0,0,0],price:1890,note:'주방세제',photo:null,done:false,cat:'detergent'},
+  {id:285,name:'참그린 매실 주방세제 1.2L',qtys:[0,0,0],price:2290,note:'주방세제',photo:null,done:false,cat:'detergent'},
+  {id:286,name:'세이프 천연미네랄 주방세제 1L',qtys:[0,0,0],price:3490,note:'주방세제',photo:null,done:false,cat:'detergent'},
+  {id:287,name:'참그린 순수발효 주방세제 2L',qtys:[0,0,0],price:3090,note:'주방세제',photo:null,done:false,cat:'detergent'},
+  {id:288,name:'자연퐁 세균 설거지 주방세제 1.4L',qtys:[0,0,0],price:3480,note:'주방세제',photo:null,done:false,cat:'detergent'},
+  {id:289,name:'부케가르니 식기세척기 세제 1L',qtys:[0,0,0],price:4980,note:'식세기세제',photo:null,done:false,cat:'detergent'},
+  {id:290,name:'TS 바디샴푸 500g',qtys:[0,0,0],price:8900,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:291,name:'아로마티카 두피 영양제',qtys:[0,0,0],price:4480,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:292,name:'려 샴푸',qtys:[0,0,0],price:6870,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:293,name:'려 모근강화볼륨샴푸',qtys:[0,0,0],price:4020,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:294,name:'닥터포헤어 탈모 샴푸',qtys:[0,0,0],price:10120,note:'탈모',photo:null,done:false,cat:'shampoo_body'},
+  {id:295,name:'닥터포헤어 두피케어 샴푸',qtys:[0,0,0],price:10260,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:296,name:'퍼퓸 샴푸 600ml',qtys:[0,0,0],price:2740,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:297,name:'케라시스 퍼퓸샴푸 600ml',qtys:[0,0,0],price:3450,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:298,name:'부케가르니 시그니처 샴푸 500ml',qtys:[0,0,0],price:4780,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:299,name:'부케가르니 딥 퍼퓸 샴푸 500ml',qtys:[0,0,0],price:5070,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:300,name:'엘라스틴 단백질 트리트먼트 프로폴리테라',qtys:[0,0,0],price:6600,note:'트리트먼트',photo:null,done:false,cat:'shampoo_body'},
+  {id:301,name:'엘라스틴 고영양 트리트먼트 아미노펩타이드',qtys:[0,0,0],price:4160,note:'트리트먼트',photo:null,done:false,cat:'shampoo_body'},
+  {id:302,name:'케라시스 트리트먼트 극손상케어',qtys:[0,0,0],price:3190,note:'트리트먼트',photo:null,done:false,cat:'shampoo_body'},
+  {id:303,name:'케라시스 퍼퓸린스 러블리로맨틱 600ml',qtys:[0,0,0],price:3450,note:'린스',photo:null,done:false,cat:'shampoo_body'},
+  {id:304,name:'비욘드 딥클린 쿨링 컨디셔너 450ml',qtys:[0,0,0],price:7000,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:305,name:'엘라스틴 단백질 프로폴리테라 컨디셔너 500ml',qtys:[0,0,0],price:6600,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:306,name:'케라시스 퍼퓸린스 엘레강스엠버 600ml',qtys:[0,0,0],price:2940,note:'린스',photo:null,done:false,cat:'shampoo_body'},
+  {id:307,name:'엘라스틴 고영양 컨디셔너 아미노펩타이드',qtys:[0,0,0],price:5000,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:308,name:'엘라스틴 단백질 손상 컨디셔너 855ml',qtys:[0,0,0],price:4100,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:309,name:'케라시스 어드밴스드 볼륨 앰플 트리트먼트 750ml',qtys:[0,0,0],price:3680,note:'',photo:null,done:false,cat:'shampoo_body'},
+  {id:310,name:'비욘드 모이스처 바디워시 머스크향 500ml',qtys:[0,0,0],price:4400,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:311,name:'비욘드 릴렉싱 바디워시 프루티향 500ml',qtys:[0,0,0],price:4400,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:312,name:'닥터지 모이스터 인바디 바디워시 500ml',qtys:[0,0,0],price:6800,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:313,name:'오가니스트 각질케어 히말라야 핑크솔트 바디워시 500g',qtys:[0,0,0],price:5390,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:314,name:'비욘드 바디디펜스 샤워 바디워시 450ml',qtys:[0,0,0],price:7150,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:315,name:'해피바스 체리블라썸 바디워시 910g',qtys:[0,0,0],price:3890,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:316,name:'쿤달 허니 마카다미아 바디워시 715ml',qtys:[0,0,0],price:5190,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:317,name:'뉴트로지나 시카 에멀젼 310ml',qtys:[0,0,0],price:9990,note:'바디로션',photo:null,done:false,cat:'shampoo_body'},
+  {id:318,name:'스킨유 이노센트 컴포티 우디 샤워젤 500g',qtys:[0,0,0],price:6570,note:'바디워시',photo:null,done:false,cat:'shampoo_body'},
+  {id:319,name:'레몬버베나 바디로션 450ml',qtys:[0,0,0],price:4800,note:'바디로션',photo:null,done:false,cat:'shampoo_body'},
+  {id:320,name:'바세린 리프팅 리페어 로션 450ml',qtys:[0,0,0],price:5000,note:'바디로션',photo:null,done:false,cat:'shampoo_body'},
+  {id:321,name:'센텔리안24 마데카베리어 바디로션 500ml',qtys:[0,0,0],price:10000,note:'바디로션',photo:null,done:false,cat:'shampoo_body'},
+  {id:322,name:'경동 타올',qtys:[0,0,0],price:2000,note:'',photo:null,done:false,cat:'tissue'},
+  {id:323,name:'크리넥스 24롤',qtys:[0,0,0],price:18810,note:'화장지',photo:null,done:false,cat:'tissue'},
+  {id:324,name:'잘풀리는집 24롤',qtys:[0,0,0],price:13000,note:'화장지',photo:null,done:false,cat:'tissue'},
+  {id:325,name:'모나리자 30롤',qtys:[0,0,0],price:11100,note:'화장지',photo:null,done:false,cat:'tissue'},
+  {id:326,name:'깨끗한나라 30롤',qtys:[0,0,0],price:11150,note:'화장지',photo:null,done:false,cat:'tissue'},
+  {id:327,name:'깨끗한나라 여행용 70매',qtys:[0,0,0],price:320,note:'',photo:null,done:false,cat:'tissue'},
+  {id:328,name:'잘풀리는집 클래식퓨어 2개입',qtys:[0,0,0],price:920,note:'',photo:null,done:false,cat:'tissue'},
+  {id:329,name:'잘풀리는집 키친타올 145매×8롤',qtys:[0,0,0],price:5890,note:'키친타올',photo:null,done:false,cat:'tissue'},
+  {id:330,name:'모나리자 보네르가든 내추럴 200매×4입',qtys:[0,0,0],price:3890,note:'각티슈',photo:null,done:false,cat:'tissue'},
+  {id:331,name:'모나리자 안심 3겹 키친타올',qtys:[0,0,0],price:5550,note:'키친타올',photo:null,done:false,cat:'tissue'},
+  {id:332,name:'앙블랑 물티슈 캡형 72매',qtys:[0,0,0],price:1300,note:'물티슈',photo:null,done:false,cat:'tissue'},
+  {id:333,name:'크리넥스 살균 안심물티슈 80매',qtys:[0,0,0],price:1980,note:'물티슈',photo:null,done:false,cat:'tissue'},
+  {id:334,name:'앙블랑 물티슈 민트 유대리필 20매',qtys:[0,0,0],price:450,note:'물티슈',photo:null,done:false,cat:'tissue'},
+  {id:335,name:'리꼬베이비 레시피 손&입 물티슈 30매',qtys:[0,0,0],price:1200,note:'물티슈',photo:null,done:false,cat:'tissue'},
+  {id:336,name:'코코토토 프리미엄 물티슈 캡형 70매',qtys:[0,0,0],price:1500,note:'물티슈',photo:null,done:false,cat:'tissue'},
+  {id:337,name:'오쎄 클린에퓨어 빅사이즈 물티슈 60매',qtys:[0,0,0],price:1690,note:'물티슈',photo:null,done:false,cat:'tissue'},
+  {id:338,name:'아망아망 물티슈 캡형 72매',qtys:[0,0,0],price:1600,note:'물티슈',photo:null,done:false,cat:'tissue'},
+  {id:339,name:'리코 프리미엄 물티슈 70매',qtys:[0,0,0],price:1400,note:'물티슈',photo:null,done:false,cat:'tissue'},
+  {id:340,name:'레인보우 극세사 행주 6개입',qtys:[0,0,0],price:2640,note:'',photo:null,done:false,cat:'tissue'},
+  {id:341,name:'무한타올',qtys:[0,0,0],price:2500,note:'',photo:null,done:false,cat:'tissue'},
+  {id:342,name:'우한타올 페이스타올',qtys:[0,0,0],price:2200,note:'',photo:null,done:false,cat:'tissue'},
+  {id:343,name:'깨끗한나라 각티슈 280매 3개입',qtys:[0,0,0],price:4120,note:'각티슈',photo:null,done:false,cat:'tissue'},
+  {id:344,name:'잘풀리는집 각티슈 250매 3개입',qtys:[0,0,0],price:4160,note:'각티슈',photo:null,done:false,cat:'tissue'},
+  {id:345,name:'예지미인 팬티라이너 롱 60P',qtys:[0,0,0],price:4890,note:'팬티라이너',photo:null,done:false,cat:'sanitary'},
+  {id:346,name:'순수한면 유기농 순면커버 중 16P',qtys:[0,0,0],price:1860,note:'생리대',photo:null,done:false,cat:'sanitary'},
+  {id:347,name:'순수한면 제로 대 14P',qtys:[0,0,0],price:2030,note:'생리대',photo:null,done:false,cat:'sanitary'},
+  {id:348,name:'순수한면 제로 오버나이트 12P',qtys:[0,0,0],price:1950,note:'생리대',photo:null,done:false,cat:'sanitary'},
+  {id:349,name:'순수한면 유기농 순면커버 대 32P',qtys:[0,0,0],price:4250,note:'생리대',photo:null,done:false,cat:'sanitary'},
+  {id:350,name:'좋은느낌 울트라 날개 중 36P',qtys:[0,0,0],price:5490,note:'생리대',photo:null,done:false,cat:'sanitary'},
+  {id:351,name:'소피 바디피트 블록맞춤 중 32P',qtys:[0,0,0],price:5720,note:'생리대',photo:null,done:false,cat:'sanitary'},
+  {id:352,name:'템포 내추럴슈퍼 16P',qtys:[0,0,0],price:4300,note:'탐폰',photo:null,done:false,cat:'sanitary'}
+];
+let nextId = 200;
+let addPhotoData = null;
+let activeCat = '';   // 현재 선택된 카테고리 필터 ('' = 전체)
+let dragId = null;    // 드래그 중인 item id
+let collapsed = {};   // 접힌 섹션
+
+function names(){ return [0,1,2].map(i=>(document.getElementById('pname'+i).value.trim()||'이름'+(i+1))); }
+
+function updateNames(){
+  render();
+}
+
+function previewAdd(inp){
+  if(!inp.files||!inp.files[0]) return;
+  const r = new FileReader();
+  r.onload = e => {
+    addPhotoData = e.target.result;
+    document.getElementById('add-photo-wrap').innerHTML =
+      `<img src="${addPhotoData}" class="add-photo-preview" onclick="document.getElementById('add-file-inp').click()" title="클릭해서 변경">`;
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+
+/* ── 카테고리 필터 버튼 렌더 ── */
+function renderCatFilter(){
+  const wrap = document.getElementById('cat-filter');
+  const all = `<button class="cat-btn${activeCat===''?' active':''}" onclick="setCat('')">전체</button>`;
+  const btns = CATS.map(c=>{
+    const cnt = items.filter(i=>i.cat===c.id).length;
+    return `<button class="cat-btn${activeCat===c.id?' active':''}" onclick="setCat('${c.id}')">${c.label} <span style="opacity:.6">${cnt}</span></button>`;
+  }).join('');
+  wrap.innerHTML = all + btns;
+}
+function setCat(id){ activeCat=id; render(); }
+
+/* ── 메인 render ── */
+function render(){
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  const fp = document.getElementById('fperson').value;
+  const ns = names();
+  const wrap = document.getElementById('sections-wrap');
+
+  // 필터 적용
+  const filtered = items.filter(it=>{
+    const mq = !q || it.name.toLowerCase().includes(q) || (it.note||'').toLowerCase().includes(q);
+    const mp = fp==='' ? true : it.qtys[+fp] > 0;
+    const mc = activeCat==='' ? true : it.cat===activeCat;
+    return mq && mp && mc;
+  });
+
+  // 카테고리 필터 버튼 갱신
+  renderCatFilter();
+
+  // 표시할 카테고리 목록 (해당 항목이 있는 것만)
+  const visibleCats = CATS.filter(c=> filtered.some(i=>i.cat===c.id));
+  const uncatItems = filtered.filter(i=>!CATS.find(c=>c.id===i.cat));
+  if(uncatItems.length) visibleCats.push({id:'etc',label:'📦 기타'});
+
+  if(!filtered.length){
+    wrap.innerHTML=`<div class="card"><div class="nodata">항목이 없습니다</div></div>`;
+    updateStats(); return;
+  }
+
+  wrap.innerHTML = visibleCats.map(cat=>{
+    const catItems = filtered.filter(i=>i.cat===cat.id);
+    if(!catItems.length) return '';
+    const isCollapsed = collapsed[cat.id];
+    const rows = catItems.map((it,idx)=>renderRow(it,idx,ns)).join('');
+    const totalQtys = [0,1,2].map(pi=>catItems.reduce((a,i)=>a+i.qtys[pi],0));
+    const priced = catItems.filter(i=>i.price!=null);
+    const totalPrice = priced.length ? priced.reduce((a,i)=>a+(i.price*i.qtys.reduce((s,v)=>s+v,0)),0) : null;
+
+    return `
+    <div class="section-wrap" id="sec-${cat.id}">
+      <div class="section-header" onclick="toggleSection('${cat.id}')">
+        <span class="section-title">${cat.label}</span>
+        <span class="section-count">${catItems.length}개</span>
+        <span class="section-toggle${isCollapsed?' collapsed':''}">▼</span>
+      </div>
+      <div class="section-body card" style="display:${isCollapsed?'none':'block'}">
+        <table>
+          <thead><tr>
+            <th class="col-chk"></th>
+            <th class="col-no" style="color:var(--text-sub)">#</th>
+            <th class="col-photo">사진</th>
+            <th class="col-name left">품명</th>
+            <th class="col-p">${ns[0]}<br><small style="color:var(--text-sub);font-weight:400">개수</small></th>
+            <th class="col-p">${ns[1]}<br><small style="color:var(--text-sub);font-weight:400">개수</small></th>
+            <th class="col-p">${ns[2]}<br><small style="color:var(--text-sub);font-weight:400">개수</small></th>
+            <th class="col-price" style="text-align:right">가격(원)</th>
+            <th class="col-note left">비고</th>
+            <th class="col-del"></th>
+          </tr></thead>
+          <tbody id="tbody-${cat.id}"
+            ondragover="onDragOverTbody(event,'${cat.id}')"
+            ondrop="onDropTbody(event,'${cat.id}')"
+            ondragleave="onDragLeaveTbody(event)"
+          >${rows}</tbody>
+          <tfoot><tr>
+            <td colspan="4" style="text-align:right;color:var(--text-sub);font-weight:400">합계</td>
+            <td style="text-align:center;font-weight:600;color:var(--text)">${totalQtys[0]}개</td>
+            <td style="text-align:center;font-weight:600;color:var(--text)">${totalQtys[1]}개</td>
+            <td style="text-align:center;font-weight:600;color:var(--text)">${totalQtys[2]}개</td>
+            <td style="text-align:right;font-weight:600;color:var(--gold)">${totalPrice!=null?totalPrice.toLocaleString()+'원':'-'}</td>
+            <td colspan="2"></td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateStats();
+}
+
+function renderRow(it, idx, ns){
+  const photoHtml = it.photo
+    ? `<img src="${it.photo}" class="photo-thumb" onclick="openModal(${it.id})" title="크게 보기">`
+    : `<div class="photo-upload-btn" onclick="triggerUpload(${it.id})" title="사진 추가">+</div>`;
+  const qCells = [0,1,2].map(pi=>`
+    <td class="col-p"><div class="qty-wrap">
+      <div class="qty-label l${pi}">${ns[pi]}</div>
+      <input type="number" class="qty-in" value="${it.qtys[pi]}" min="0" onchange="setQty(${it.id},${pi},this.value)">
+    </div></td>`).join('');
+  const catOpts = CATS.map(c=>`<option value="${c.id}"${it.cat===c.id?' selected':''}>${c.label}</option>`).join('');
+
+  return `<tr class="${it.done?'checked':''}" draggable="true"
+    ondragstart="onDragStart(event,${it.id})"
+    ondragend="onDragEnd(event)"
+    ondragover="onDragOverRow(event,${it.id})"
+    ondrop="onDropRow(event,${it.id})"
+    id="row-${it.id}">
+    <td class="col-chk"><input type="checkbox" ${it.done?'checked':''} onchange="toggleDone(${it.id})"></td>
+    <td class="col-no" style="color:var(--text-sub);font-size:11px;text-align:center;cursor:grab">⠿</td>
+    <td class="col-photo"><div class="photo-cell" id="pcell-${it.id}">${photoHtml}</div></td>
+    <td class="col-name"><input class="name-in" type="text" value="${it.name.replace(/"/g,'&quot;')}" onchange="setField(${it.id},'name',this.value)"></td>
+    ${qCells}
+    <td class="col-price"><input class="price-in" type="number" value="${it.price!=null?it.price:''}" placeholder="-" onchange="setField(${it.id},'price',this.value?+this.value:null)"></td>
+    <td class="col-note"><input class="note-in" type="text" value="${(it.note||'').replace(/"/g,'&quot;')}" placeholder="메모..." onchange="setField(${it.id},'note',this.value)"></td>
+    <td class="col-del">
+      <select class="cat-in" onchange="moveCat(${it.id},this.value)" title="카테고리 이동">${catOpts}</select>
+      <button class="btn danger sm" onclick="delItem(${it.id})">삭제</button>
+    </td>
+  </tr>`;
+}
+
+/* ── 섹션 접기/펼치기 ── */
+function toggleSection(catId){
+  collapsed[catId] = !collapsed[catId];
+  render();
+}
+
+/* ── 카테고리 변경 ── */
+function moveCat(id, newCat){
+  const it = items.find(i=>i.id===id);
+  if(it){ it.cat = newCat; }
+  render();
+}
+
+/* ── 드래그 앤 드롭 (행 순서 변경) ── */
+function onDragStart(e, id){
+  dragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>{ const r=document.getElementById('row-'+id); if(r) r.classList.add('dragging'); },0);
+}
+function onDragEnd(e){
+  document.querySelectorAll('tr.dragging').forEach(r=>r.classList.remove('dragging'));
+  document.querySelectorAll('tr.drag-over').forEach(r=>r.classList.remove('drag-over'));
+  dragId = null;
+}
+function onDragOverRow(e, id){
+  e.preventDefault();
+  document.querySelectorAll('tr.drag-over').forEach(r=>r.classList.remove('drag-over'));
+  const r = document.getElementById('row-'+id);
+  if(r && id!==dragId) r.classList.add('drag-over');
+}
+function onDropRow(e, targetId){
+  e.preventDefault(); e.stopPropagation();
+  if(dragId===null || dragId===targetId) return;
+  const fromIdx = items.findIndex(i=>i.id===dragId);
+  const toIdx   = items.findIndex(i=>i.id===targetId);
+  if(fromIdx<0||toIdx<0) return;
+  // 카테고리도 target과 맞춤
+  items[fromIdx].cat = items[toIdx].cat;
+  const [moved] = items.splice(fromIdx,1);
+  items.splice(toIdx,0,moved);
+  render();
+}
+function onDragOverTbody(e, catId){
+  e.preventDefault();
+}
+function onDropTbody(e, catId){
+  e.preventDefault();
+  if(dragId===null) return;
+  const it = items.find(i=>i.id===dragId);
+  if(it && it.cat!==catId){ it.cat=catId; render(); }
+}
+function onDragLeaveTbody(e){
+  // no-op
+}
+
+function updateStats(){
+  document.getElementById('s-count').textContent = items.length;
+  const priced = items.filter(i=>i.price!=null);
+  document.getElementById('s-total').textContent = priced.length
+    ? priced.reduce((a,i)=>a+(i.price*i.qtys.reduce((s,v)=>s+v,0)),0).toLocaleString()+'원' : '-';
+  const done = items.filter(i=>i.done).length;
+  document.getElementById('s-done').textContent = done;
+  document.getElementById('s-left').textContent = items.length-done;
+}
+
+function triggerUpload(id){
+  let inp = document.getElementById('upl-'+id);
+  if(!inp){
+    inp = document.createElement('input');
+    inp.type='file'; inp.accept='image/*'; inp.style.display='none'; inp.id='upl-'+id;
+    inp.onchange = e => doUpload(id, e.target);
+    document.body.appendChild(inp);
+  }
+  inp.click();
+}
+
+function doUpload(id, inp){
+  if(!inp.files||!inp.files[0]) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const it = items.find(i=>i.id===id);
+    if(it){ it.photo=e.target.result; }
+    const cell = document.getElementById('pcell-'+id);
+    if(cell) cell.innerHTML=`<img src="${e.target.result}" class="photo-thumb" onclick="openModal(${id})" title="크게 보기">`;
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+
+function openModal(id){
+  const it = items.find(i=>i.id===id);
+  if(!it||!it.photo) return;
+  document.getElementById('modal-img').src = it.photo;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+function toggleDone(id){
+  const it=items.find(i=>i.id===id); if(it) it.done=!it.done; render();
+}
+function setQty(id,pi,v){
+  const it=items.find(i=>i.id===id); if(it) it.qtys[pi]=v===''?0:+v; updateStats();
+}
+function setField(id,f,v){
+  const it=items.find(i=>i.id===id); if(it) it[f]=v; updateStats();
+}
+function delItem(id){ items=items.filter(i=>i.id!==id); render(); }
+
+function toggleAdd(){
+  const el=document.getElementById('add-panel');
+  el.classList.toggle('show');
+  if(el.classList.contains('show')) document.getElementById('new-name').focus();
+}
+
+function addItem(){
+  const name=document.getElementById('new-name').value.trim();
+  if(!name) return;
+  const qtys=[0,1,2].map(i=>{ const v=document.getElementById('new-q'+i).value; return v===''?0:+v; });
+  const price=document.getElementById('new-price').value?+document.getElementById('new-price').value:null;
+  const note=document.getElementById('new-note').value.trim();
+  const cat=document.getElementById('new-cat').value||'etc';
+  items.push({id:nextId++,name,qtys,price,note,photo:addPhotoData,done:false,cat});
+  ['new-name','new-q0','new-q1','new-q2','new-price','new-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('new-cat').value='etc';
+  addPhotoData=null;
+  document.getElementById('add-photo-wrap').innerHTML=`<div class="add-photo-btn" onclick="document.getElementById('add-file-inp').click()"><span style="font-size:22px">+</span><span>사진</span></div>`;
+  document.getElementById('add-file-inp').value='';
+  render();
+}
+
+function clearDone(){ items=items.filter(i=>!i.done); render(); }
+
+render();
+</script>
+</body>
+</html>
